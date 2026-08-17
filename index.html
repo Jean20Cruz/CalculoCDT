@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Carga Dinámica Total (C.D.T.) - Hidropal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 11pt;
+            }
+            .print-container {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            input, select {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                font-weight: bold;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans p-2 sm:p-4 md:p-6">
+
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 print-container">
+        
+        <!-- Header con Botones de Acción -->
+        <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-brand-800 text-white p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Calculo de Carga Dinámica Total (C.D.T.)</h1>
+                <p class="text-slate-300 text-xs sm:text-sm mt-1">Hidropal - División de Bombas</p>
+            </div>
+            <div class="no-print flex gap-2 w-full sm:w-auto">
+                <button onclick="window.print()" class="flex-1 sm:flex-none px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Imprimir / Exportar PDF
+                </button>
+                <button onclick="resetForm()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-lg transition text-sm">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <form id="cdtForm" class="p-4 sm:p-6 space-y-6">
+            
+            <!-- 1. Datos del Cliente e Información General -->
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">1. Datos del Cliente / Proyecto</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Nombre del Cliente</label>
+                        <input type="text" id="cliente_nombre" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Empresa</label>
+                        <input type="text" id="cliente_empresa" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Fecha</label>
+                        <input type="date" id="fecha" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Teléfono</label>
+                        <input type="text" id="cliente_telefono" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-600">Correo Electrónico</label>
+                        <input type="email" id="cliente_correo" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Datos Habitacionales Opocionales -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm pt-2 border-t border-slate-200">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">N° Personas por Casa</label>
+                        <input type="number" id="num_personas" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">N° Casas a Abastecer</label>
+                        <input type="number" id="num_casas" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Tipo de Pozo</label>
+                        <input type="text" id="tipo_pozo" placeholder="Ej. Mecánico / Manual" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600">Tipo Corriente Disponible</label>
+                        <input type="text" id="tipo_corriente" placeholder="Ej. Monofásica / Trifásica" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Perfil del Pozo e Instalación -->
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">2. Perfil del Pozo y Distancias (en Pies)</h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Diámetro Pozo (Pulgadas)</label>
+                        <input type="number" step="any" id="diametro_pozo" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Profundidad Pozo (Pies)</label>
+                        <input type="number" step="any" id="profundidad" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Nivel Estático (Pies)</label>
+                        <input type="number" step="any" id="nivel_estatico" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Nivel Dinámico (Pies)</label>
+                        <input type="number" step="any" id="nivel_dinamico" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Punto Instalación Bomba (Pies)</label>
+                        <input type="number" step="any" id="punto_instalacion" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Distancia Horizontal Agua (Pies)</label>
+                        <input type="number" step="any" id="distancia_horizontal" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Altura Elevar Agua (Pies)</label>
+                        <input type="number" step="any" id="altura_elevar" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700">Presión Descarga (Pies)</label>
+                        <input type="number" step="any" id="presion_descarga" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Requerimiento de Caudal (GPM) y Fricción -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- GPM y Factores -->
+                <div class="bg-amber-100/60 p-4 rounded-lg border border-amber-300 space-y-3">
+                    <h2 class="text-sm font-bold text-amber-900 uppercase tracking-wider">3. Caudal Requerido y Fricción</h2>
+                    <div>
+                        <label class="block text-xs font-bold text-amber-900">GALONES POR MINUTO (G.P.M.) *</label>
+                        <input type="number" step="any" id="gpm" value="" oninput="calculate()" class="w-full mt-1 p-2.5 bg-amber-200 border-2 border-amber-400 rounded-lg text-lg font-bold text-amber-950 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm pt-2">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700">Factor Fricción / 100 ft</label>
+                            <input type="number" step="any" id="factor_friccion" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700">Eficiencia Bomba (%)</label>
+                            <input type="number" step="any" id="eficiencia" value="60" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de Tubería Derivada -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 text-xs sm:text-sm">
+                    <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">Análisis de Tubería Calculado</h2>
+                    <div class="flex justify-between py-1 border-b border-slate-200">
+                        <span class="text-slate-600">Altura de Agua en Pozo:</span>
+                        <span id="res_altura_agua" class="font-bold text-slate-800">121.36 ft</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-200">
+                        <span class="text-slate-600">Tubos Dentro del Pozo (20 ft c/u):</span>
+                        <span id="res_tubos_dentro" class="font-bold text-slate-800">15.42 tubos</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-200">
+                        <span class="text-slate-600">Tubos Fuera del Pozo (20 ft c/u):</span>
+                        <span id="res_tubos_fuera" class="font-bold text-slate-800">11.48 tubos</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span class="text-slate-600">Diámetro Tubo Sugerido:</span>
+                        <span id="res_diametro_sugerido" class="font-bold text-brand-700">1.43 "</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Pérdidas por Accesorios / Válvulas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dentro del Pozo -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                    <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">Accesorios Dentro del Pozo</h2>
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="text-slate-500 border-b">
+                                <th class="pb-1">Cant.</th>
+                                <th class="pb-1">Pies</th>
+                                <th class="pb-1">Descripción</th>
+                                <th class="pb-1 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-1"><input type="number" id="acc_d_cant_1" value="" oninput="calculate()" class="w-12 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="number" id="acc_d_pies_1" value="" oninput="calculate()" class="w-14 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="text" id="acc_d_desc_1" value="&quot;" class="w-full p-1 bg-amber-50 border border-amber-300 rounded"></td>
+                                <td class="py-1 text-right font-semibold" id="acc_d_tot_1"></td>
+                            </tr>
+                            <tr>
+                                <td class="py-1"><input type="number" id="acc_d_cant_2" value="" oninput="calculate()" class="w-12 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="number" id="acc_d_pies_2" value="" oninput="calculate()" class="w-14 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="text" id="acc_d_desc_2" value="&quot;" class="w-full p-1 bg-amber-50 border border-amber-300 rounded"></td>
+                                <td class="py-1 text-right font-semibold" id="acc_d_tot_2"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-between pt-2 border-t text-xs font-bold text-slate-700">
+                        <span>Total Pies Accesorios Dentro:</span>
+                        <span id="tot_acc_dentro">13.00 ft</span>
+                    </div>
+                </div>
+
+                <!-- Fuera del Pozo -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                    <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">Accesorios Fuera del Pozo</h2>
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="text-slate-500 border-b">
+                                <th class="pb-1">Cant.</th>
+                                <th class="pb-1">Pies</th>
+                                <th class="pb-1">Descripción</th>
+                                <th class="pb-1 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="space-y-1">
+                            <tr>
+                                <td class="py-1"><input type="number" id="acc_f_cant_1" value="" oninput="calculate()" class="w-12 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="number" id="acc_f_pies_1" value="" oninput="calculate()" class="w-14 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="text" id="acc_f_desc_1" value="&quot;" class="w-full p-1 bg-amber-50 border border-amber-300 rounded"></td>
+                                <td class="py-1 text-right font-semibold" id="acc_f_tot_1"></td>
+                            </tr>
+                            <tr>
+                                <td class="py-1"><input type="number" id="acc_f_cant_2" value="" oninput="calculate()" class="w-12 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="number" id="acc_f_pies_2" value="" oninput="calculate()" class="w-14 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="text" id="acc_f_desc_2" value="&quot;" class="w-full p-1 bg-amber-50 border border-amber-300 rounded"></td>
+                                <td class="py-1 text-right font-semibold" id="acc_f_tot_2"></td>
+                            </tr>
+                            <tr>
+                                <td class="py-1"><input type="number" id="acc_f_cant_3" value="" oninput="calculate()" class="w-12 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="number" id="acc_f_pies_3" value="" oninput="calculate()" class="w-14 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="text" id="acc_f_desc_3" value="&quot;" class="w-full p-1 bg-amber-50 border border-amber-300 rounded"></td>
+                                <td class="py-1 text-right font-semibold" id="acc_f_tot_3"></td>
+                            </tr>
+                            <tr>
+                                <td class="py-1"><input type="number" id="acc_f_cant_4" value="" oninput="calculate()" class="w-12 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="number" id="acc_f_pies_4" value="" oninput="calculate()" class="w-14 p-1 bg-amber-50 border border-amber-300 rounded text-center"></td>
+                                <td class="py-1"><input type="text" id="acc_f_desc_4" value="&quot;" class="w-full p-1 bg-amber-50 border border-amber-300 rounded"></td>
+                                <td class="py-1 text-right font-semibold" id="acc_f_tot_4"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-between pt-2 border-t text-xs font-bold text-slate-700">
+                        <span>Total Pies Accesorios Fuera:</span>
+                        <span id="tot_acc_fuera">41.70 ft</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. RESULTADO FINAL: C.D.T. Y POTENCIA -->
+            <div class="bg-gradient-to-br from-brand-900 to-slate-900 text-white p-5 sm:p-6 rounded-xl shadow-md space-y-4">
+                <h2 class="text-xs font-semibold text-brand-100 uppercase tracking-widest border-b border-brand-800 pb-1">Resultados Finales del Cálculo</h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                    <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
+                        <span class="block text-xs text-brand-100 uppercase">Carga Dinámica Total</span>
+                        <span id="res_cdt" class="text-3xl font-extrabold text-amber-400">297.80</span>
+                        <span class="block text-xs text-slate-300">PIES (C.D.T.)</span>
+                    </div>
+
+                    <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
+                        <span class="block text-xs text-brand-100 uppercase">Pérdida por Fricción Total</span>
+                        <span id="res_perdida_friccion" class="text-2xl font-bold text-white">25.40</span>
+                        <span class="block text-xs text-slate-300">PIES</span>
+                    </div>
+
+                    <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
+                        <span class="block text-xs text-brand-100 uppercase">Potencia de Agua (WHP)</span>
+                        <span id="res_whp" class="text-2xl font-bold text-white">2.26</span>
+                        <span class="block text-xs text-slate-300">HP</span>
+                    </div>
+
+                    <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
+                        <span class="block text-xs text-brand-100 uppercase">Potencia al Freno (BHP)</span>
+                        <span id="res_bhp" class="text-2xl font-bold text-emerald-400">3.76</span>
+                        <span class="block text-xs text-slate-300">HP (a 60% efic.)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-300 pt-2 border-t border-white/10">
+                    <div>Pérdida Tubería Fuera: <span id="res_p_fuera" class="font-semibold text-white">12.91 ft</span></div>
+                    <div>Pérdida Tubería Dentro: <span id="res_p_dentro" class="font-semibold text-white">12.49 ft</span></div>
+                    <div>Presión Descarga: <span id="res_p_descarga" class="font-semibold text-white">23.10 ft</span></div>
+                    <div>GPH Equivalente: <span id="res_gph" class="font-semibold text-white">1,800 GPH</span></div>
+                </div>
+            </div>
+
+            <!-- Pie de página informativo -->
+            <p class="text-center text-xs text-slate-500 italic pt-2">
+                EL CÁLCULO ANTERIOR HA SIDO OBTENIDO CON LA INFORMACIÓN PROPORCIONADA POR EL CLIENTE.
+            </p>
+        </form>
+    </div>
+
+    <script>
+        // Establecer fecha de hoy automáticamente
+        document.getElementById('fecha').valueAsDate = new Date();
+
+        function getNum(id) {
+            const val = parseFloat(document.getElementById(id).value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function setText(id, text) {
+            document.getElementById(id).innerText = text;
+        }
+
+        function calculate() {
+            // 1. Lectura de campos de entrada
+            const numPersonas = getNum('num_personas');
+            const numCasas = getNum('num_casas');
+            const diametroPozo = getNum('diametro_pozo');
+            const profundidad = getNum('profundidad');
+            const nivelEstatico = getNum('nivel_estatico');
+            const nivelDinamico = getNum('nivel_dinamico');
+            const puntoInstalacion = getNum('punto_instalacion');
+            const distanciaHoriz = getNum('distancia_horizontal');
+            const alturaElevar = getNum('altura_elevar');
+            const presionDescargaPies = getNum('presion_descarga');
+            const gpm = getNum('gpm');
+            const factorFriccion = getNum('factor_friccion');
+            const eficienciaPct = getNum('eficiencia') / 100;
+
+            // 2. Accesorios Dentro
+            const accD1 = getNum('acc_d_cant_1') * getNum('acc_d_pies_1');
+            const accD2 = getNum('acc_d_cant_2') * getNum('acc_d_pies_2');
+            setText('acc_d_tot_1', accD1.toFixed(2));
+            setText('acc_d_tot_2', accD2.toFixed(2));
+            const totalAccDentro = accD1 + accD2;
+            setText('tot_acc_dentro', totalAccDentro.toFixed(2) + ' ft');
+
+            // 3. Accesorios Fuera
+            const accF1 = getNum('acc_f_cant_1') * getNum('acc_f_pies_1');
+            const accF2 = getNum('acc_f_cant_2') * getNum('acc_f_pies_2');
+            const accF3 = getNum('acc_f_cant_3') * getNum('acc_f_pies_3');
+            const accF4 = getNum('acc_f_cant_4') * getNum('acc_f_pies_4');
+            setText('acc_f_tot_1', accF1.toFixed(2));
+            setText('acc_f_tot_2', accF2.toFixed(2));
+            setText('acc_f_tot_3', accF3.toFixed(2));
+            setText('acc_f_tot_4', accF4.toFixed(2));
+            const totalAccFuera = accF1 + accF2 + accF3 + accF4;
+            setText('tot_acc_fuera', totalAccFuera.toFixed(2) + ' ft');
+
+            // 4. Cálculos Derivados del Pozo
+            const alturaAguaPozo = profundidad - nivelEstatico;
+            const tubosDentro = puntoInstalacion / 20;
+            const tubosFuera = distanciaHoriz / 20;
+            const diametroSugerido = Math.sqrt((gpm * 0.4085) / 6);
+
+            setText('res_altura_agua', alturaAguaPozo.toFixed(2) + ' ft');
+            setText('res_tubos_dentro', tubosDentro.toFixed(2) + ' tubos');
+            setText('res_tubos_fuera', tubosFuera.toFixed(2) + ' tubos');
+            setText('res_diametro_sugerido', diametroSugerido.toFixed(2) + ' "');
+
+            // 5. Cálculos de Fricción
+            // Tuberia Fuera (H54 en Excel) = Accesorios Fuera + Accesorios Dentro + Distancia Horiz
+            const tuberiaFueraPies = totalAccFuera + totalAccDentro + distanciaHoriz;
+            const perdidaFuera = (tuberiaFueraPies * factorFriccion) / 100;
+
+            // Tuberia Dentro (H55 en Excel) = Punto Instalación
+            const tuberiaDentroPies = puntoInstalacion;
+            const perdidaDentro = (tuberiaDentroPies * factorFriccion) / 100;
+
+            const totalPerdidaFriccion = perdidaFuera + perdidaDentro;
+
+            // Presión en descarga equivalente
+            const presionDescargaEquiv = presionDescargaPies * 2.31;
+
+            // 6. C.D.T. FINAL (D56 + H31 + B29 + B26)
+            // = Pérdida Fricción + Presión Descarga Equivalente + Altura Elevar + Nivel Dinámico
+            const cdt = totalPerdidaFriccion + presionDescargaEquiv + alturaElevar + nivelDinamico;
+
+            // 7. Potencias WHP y BHP
+            const whp = (gpm * cdt) / 3960;
+            const bhp = eficienciaPct > 0 ? whp / eficienciaPct : 0;
+            const gph = gpm * 60;
+
+            // Actualizar Interfaz de Resultados
+            setText('res_cdt', cdt.toFixed(2));
+            setText('res_perdida_friccion', totalPerdidaFriccion.toFixed(2));
+            setText('res_whp', whp.toFixed(2));
+            setText('res_bhp', bhp.toFixed(2));
+
+            setText('res_p_fuera', perdidaFuera.toFixed(2) + ' ft');
+            setText('res_p_dentro', perdidaDentro.toFixed(2) + ' ft');
+            setText('res_p_descarga', presionDescargaEquiv.toFixed(2) + ' ft');
+            setText('res_gph', gph.toLocaleString() + ' GPH');
+        }
+
+        function resetForm() {
+            if(confirm('¿Deseas restablecer todos los campos a los valores por defecto?')) {
+                document.getElementById('cdtForm').reset();
+                document.getElementById('fecha').valueAsDate = new Date();
+                calculate();
+            }
+        }
+
+        // Ejecutar primer cálculo al cargar la página
+        window.onload = calculate;
+    </script>
+</body>
+</html>
