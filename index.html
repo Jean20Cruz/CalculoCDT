@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cálculo de Carga Dinámica Total (C.D.T.) - Hidropal</title>
+    <title>Cálculo de CDT - Hidropal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -26,29 +26,50 @@
     </script>
     <style>
         @media print {
+            @page {
+                size: letter portrait;
+                margin: 0.3cm;
+            }
             .no-print {
                 display: none !important;
             }
             body {
                 background: white !important;
                 color: black !important;
-                font-size: 11pt;
+                font-size: 8.5pt !important;
+                padding: 0 !important;
             }
             .print-container {
                 box-shadow: none !important;
                 border: none !important;
                 padding: 0 !important;
                 max-width: 100% !important;
+                width: 100% !important;
             }
             input, select {
                 border: none !important;
                 background: transparent !important;
                 padding: 0 !important;
                 font-weight: bold;
+                height: auto !important;
             }
-            .page-break {
-                page-break-after: always;
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.4rem !important;
             }
+            .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.2rem !important;
+            }
+            .p-4, .sm\:p-6, .p-5 {
+                padding: 0.35rem !important;
+            }
+            .py-1 {
+                padding-top: 0.05rem !important;
+                padding-bottom: 0.05rem !important;
+            }
+            h1 { font-size: 14pt !important; }
+            h2 { font-size: 9pt !important; }
+            .text-3xl { font-size: 16pt !important; }
+            .text-2xl { font-size: 13pt !important; }
         }
     </style>
 </head>
@@ -56,18 +77,36 @@
 
     <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 print-container">
         
-        <!-- Header con Botones de Acción -->
+        <!-- Header Logo y Botones de Acción -->
         <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-brand-800 text-white p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Calculo de Carga Dinámica Total (C.D.T.)</h1>
-                <p class="text-slate-300 text-xs sm:text-sm mt-1">Hidropal - División de Bombas</p>
+            
+            <!-- Logo + Título -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <div class="bg-white p-2 rounded-lg shadow-sm flex items-center justify-center shrink-0">
+                    <img src="Logo-Hidropal.png" alt="Hidropal Logo" class="h-8 sm:h-10 w-auto object-contain">
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Cálculo de C.D.T.</h1>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-0.5">Hidropal - División de Bombas</p>
+                </div>
             </div>
-            <div class="no-print flex gap-2 w-full sm:w-auto">
-                <button onclick="window.print()" class="flex-1 sm:flex-none px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Imprimir / Exportar PDF
+
+            <!-- Botones -->
+            <div class="no-print flex flex-wrap gap-2 w-full sm:w-auto">
+                <button type="button" onclick="exportData()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Descargar Cálculo
                 </button>
-                <button onclick="resetForm()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-lg transition text-sm">
+                <label class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Cargar Cálculo
+                    <input type="file" id="importFile" accept=".cdt,.json" onchange="importData(event)" class="hidden">
+                </label>
+                <button type="button" onclick="window.print()" class="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Imprimir / PDF
+                </button>
+                <button type="button" onclick="resetForm()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-lg transition text-xs">
                     Limpiar
                 </button>
             </div>
@@ -101,7 +140,7 @@
                     </div>
                 </div>
 
-                <!-- Datos Habitacionales Opocionales -->
+                <!-- Datos Habitacionales Opcionales -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm pt-2 border-t border-slate-200">
                     <div>
                         <label class="block text-xs font-medium text-slate-600">N° Personas por Casa</label>
@@ -128,15 +167,15 @@
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Diámetro Pozo (Pulgadas)</label>
+                        <label class="block text-xs font-medium text-slate-700">Diámetro de Pozo (Pulgadas)</label>
                         <input type="number" step="any" id="diametro_pozo" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Profundidad Pozo (Pies)</label>
+                        <label class="block text-xs font-medium text-slate-700">Profundidad de Pozo (Pies)</label>
                         <input type="number" step="any" id="profundidad" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Nivel Estático (Pies)</label>
+                        <label class="block text-xs font-medium text-slate-700">Nivel Estático o Espejo de Agua (Pies)</label>
                         <input type="number" step="any" id="nivel_estatico" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
@@ -144,19 +183,19 @@
                         <input type="number" step="any" id="nivel_dinamico" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Punto Instalación Bomba (Pies)</label>
+                        <label class="block text-xs font-medium text-slate-700">Punto Instalación Bomba o Setting (Pies)</label>
                         <input type="number" step="any" id="punto_instalacion" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Distancia Horizontal Agua (Pies)</label>
+                        <label class="block text-xs font-medium text-slate-700">Distancia Horizontal a Llevar (Pies)</label>
                         <input type="number" step="any" id="distancia_horizontal" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Altura Elevar Agua (Pies)</label>
+                        <label class="block text-xs font-medium text-slate-700">Altura a Llevar (Pies)</label>
                         <input type="number" step="any" id="altura_elevar" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-700">Presión Descarga (Pies)</label>
+                        <label class="block text-xs font-medium text-slate-700">Presión de Descarga (Pies)</label>
                         <input type="number" step="any" id="presion_descarga" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded font-semibold text-slate-800">
                     </div>
                 </div>
@@ -186,22 +225,22 @@
 
                 <!-- Resumen de Tubería Derivada -->
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 text-xs sm:text-sm">
-                    <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">Análisis de Tubería Calculado</h2>
+                    <h2 class="text-sm font-semibold text-brand-800 uppercase tracking-wider border-b border-slate-200 pb-1">Calculo de Tubería</h2>
                     <div class="flex justify-between py-1 border-b border-slate-200">
                         <span class="text-slate-600">Altura de Agua en Pozo:</span>
-                        <span id="res_altura_agua" class="font-bold text-slate-800">121.36 ft</span>
+                        <span id="res_altura_agua" class="font-bold text-slate-800">0.00 ft</span>
                     </div>
                     <div class="flex justify-between py-1 border-b border-slate-200">
                         <span class="text-slate-600">Tubos Dentro del Pozo (20 ft c/u):</span>
-                        <span id="res_tubos_dentro" class="font-bold text-slate-800">15.42 tubos</span>
+                        <span id="res_tubos_dentro" class="font-bold text-slate-800">0.00 tubos</span>
                     </div>
                     <div class="flex justify-between py-1 border-b border-slate-200">
                         <span class="text-slate-600">Tubos Fuera del Pozo (20 ft c/u):</span>
-                        <span id="res_tubos_fuera" class="font-bold text-slate-800">11.48 tubos</span>
+                        <span id="res_tubos_fuera" class="font-bold text-slate-800">0.00 tubos</span>
                     </div>
                     <div class="flex justify-between py-1">
                         <span class="text-slate-600">Diámetro Tubo Sugerido:</span>
-                        <span id="res_diametro_sugerido" class="font-bold text-brand-700">1.43 "</span>
+                        <span id="res_diametro_sugerido" class="font-bold text-brand-700">0.00 "</span>
                     </div>
                 </div>
             </div>
@@ -237,7 +276,7 @@
                     </table>
                     <div class="flex justify-between pt-2 border-t text-xs font-bold text-slate-700">
                         <span>Total Pies Accesorios Dentro:</span>
-                        <span id="tot_acc_dentro">13.00 ft</span>
+                        <span id="tot_acc_dentro">0.00 ft</span>
                     </div>
                 </div>
 
@@ -282,9 +321,25 @@
                     </table>
                     <div class="flex justify-between pt-2 border-t text-xs font-bold text-slate-700">
                         <span>Total Pies Accesorios Fuera:</span>
-                        <span id="tot_acc_fuera">41.70 ft</span>
+                        <span id="tot_acc_fuera">0.00 ft</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Botones de Enlace / Tablas de Referencia -->
+            <div class="no-print flex flex-wrap gap-3 justify-center items-center py-1">
+                <a href="FRICCION-PVC-HG.pdf" target="_blank" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg text-xs transition flex items-center gap-1 border border-slate-300">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    Fricción tubería PVC
+                </a>
+                <a href="FRICCION ACCESORIOS.pdf" target="_blank" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg text-xs transition flex items-center gap-1 border border-slate-300">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    Fricción Accesorios
+                </a>
+                <a href="FRICCION VALVULAS.pdf" target="_blank" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg text-xs transition flex items-center gap-1 border border-slate-300">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    Fricción Válvulas
+                </a>
             </div>
 
             <!-- 5. RESULTADO FINAL: C.D.T. Y POTENCIA -->
@@ -294,34 +349,34 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                     <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
                         <span class="block text-xs text-brand-100 uppercase">Carga Dinámica Total</span>
-                        <span id="res_cdt" class="text-3xl font-extrabold text-amber-400">297.80</span>
+                        <span id="res_cdt" class="text-3xl font-extrabold text-amber-400">0.00</span>
                         <span class="block text-xs text-slate-300">PIES (C.D.T.)</span>
                     </div>
 
                     <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
                         <span class="block text-xs text-brand-100 uppercase">Pérdida por Fricción Total</span>
-                        <span id="res_perdida_friccion" class="text-2xl font-bold text-white">25.40</span>
+                        <span id="res_perdida_friccion" class="text-2xl font-bold text-white">0.00</span>
                         <span class="block text-xs text-slate-300">PIES</span>
                     </div>
 
                     <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
                         <span class="block text-xs text-brand-100 uppercase">Potencia de Agua (WHP)</span>
-                        <span id="res_whp" class="text-2xl font-bold text-white">2.26</span>
+                        <span id="res_whp" class="text-2xl font-bold text-white">0.00</span>
                         <span class="block text-xs text-slate-300">HP</span>
                     </div>
 
                     <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
                         <span class="block text-xs text-brand-100 uppercase">Potencia al Freno (BHP)</span>
-                        <span id="res_bhp" class="text-2xl font-bold text-emerald-400">3.76</span>
+                        <span id="res_bhp" class="text-2xl font-bold text-emerald-400">0.00</span>
                         <span class="block text-xs text-slate-300">HP (a 60% efic.)</span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-300 pt-2 border-t border-white/10">
-                    <div>Pérdida Tubería Fuera: <span id="res_p_fuera" class="font-semibold text-white">12.91 ft</span></div>
-                    <div>Pérdida Tubería Dentro: <span id="res_p_dentro" class="font-semibold text-white">12.49 ft</span></div>
-                    <div>Presión Descarga: <span id="res_p_descarga" class="font-semibold text-white">23.10 ft</span></div>
-                    <div>GPH Equivalente: <span id="res_gph" class="font-semibold text-white">1,800 GPH</span></div>
+                    <div>Pérdida Tubería Fuera: <span id="res_p_fuera" class="font-semibold text-white">0.00 ft</span></div>
+                    <div>Pérdida Tubería Dentro: <span id="res_p_dentro" class="font-semibold text-white">0.00 ft</span></div>
+                    <div>Presión Descarga: <span id="res_p_descarga" class="font-semibold text-white">0.00 ft</span></div>
+                    <div>GPH Equivalente: <span id="res_gph" class="font-semibold text-white">0 GPH</span></div>
                 </div>
             </div>
 
@@ -393,21 +448,17 @@
             setText('res_diametro_sugerido', diametroSugerido.toFixed(2) + ' "');
 
             // 5. Cálculos de Fricción
-            // Tuberia Fuera (H54 en Excel) = Accesorios Fuera + Accesorios Dentro + Distancia Horiz
             const tuberiaFueraPies = totalAccFuera + totalAccDentro + distanciaHoriz;
             const perdidaFuera = (tuberiaFueraPies * factorFriccion) / 100;
 
-            // Tuberia Dentro (H55 en Excel) = Punto Instalación
             const tuberiaDentroPies = puntoInstalacion;
             const perdidaDentro = (tuberiaDentroPies * factorFriccion) / 100;
 
             const totalPerdidaFriccion = perdidaFuera + perdidaDentro;
 
-            // Presión en descarga equivalente
             const presionDescargaEquiv = presionDescargaPies * 2.31;
 
-            // 6. C.D.T. FINAL (D56 + H31 + B29 + B26)
-            // = Pérdida Fricción + Presión Descarga Equivalente + Altura Elevar + Nivel Dinámico
+            // 6. C.D.T. FINAL
             const cdt = totalPerdidaFriccion + presionDescargaEquiv + alturaElevar + nivelDinamico;
 
             // 7. Potencias WHP y BHP
@@ -433,6 +484,56 @@
                 document.getElementById('fecha').valueAsDate = new Date();
                 calculate();
             }
+        }
+
+        // --- Funcionalidad de Exportación e Importación de Datos de Clientes ---
+        function exportData() {
+            const formInputs = document.querySelectorAll('#cdtForm input');
+            const data = {};
+            
+            formInputs.forEach(input => {
+                data[input.id] = input.value;
+            });
+
+            const cliente = document.getElementById('cliente_nombre').value.trim() || 'Cliente';
+            const fecha = document.getElementById('fecha').value || new Date().toISOString().split('T')[0];
+            const fileName = `CDT_${cliente.replace(/[^a-z0-9]/gi, '_')}_${fecha}.cdt`;
+
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    for (const id in data) {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = data[id];
+                        }
+                    }
+                    calculate();
+                    alert('Cálculo cargado correctamente');
+                } catch (err) {
+                    alert('Error al leer el archivo. Asegúrate de seleccionar un archivo .cdt válido.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input file
         }
 
         // Ejecutar primer cálculo al cargar la página
