@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -73,9 +74,9 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 font-sans p-2 sm:p-4 md:p-6">
+<body class="bg-slate-100 space-y-6 min-h-screen text-slate-800 font-sans p-2 sm:p-4 md:p-6">
 
-    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 print-container">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-100 print-container">
         
         <!-- Header Logo y Botones de Acción -->
         <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-brand-800 text-white p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -111,7 +112,8 @@
                 </button>
             </div>
         </div>
-
+    </div>
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 print-container">
         <form id="cdtForm" class="p-4 sm:p-6 space-y-6">
             
             <!-- 1. Datos del Cliente e Información General -->
@@ -129,34 +131,6 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-600">Fecha</label>
                         <input type="date" id="fecha" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600">Teléfono</label>
-                        <input type="text" id="cliente_telefono" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-medium text-slate-600">Correo Electrónico</label>
-                        <input type="email" id="cliente_correo" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </div>
-                </div>
-
-                <!-- Datos Habitacionales Opcionales -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm pt-2 border-t border-slate-200">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600">N° Personas por Casa</label>
-                        <input type="number" id="num_personas" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600">N° Casas a Abastecer</label>
-                        <input type="number" id="num_casas" value="" oninput="calculate()" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600">Tipo de Pozo</label>
-                        <input type="text" id="tipo_pozo" placeholder="Ej. Mecánico / Manual" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600">Tipo Corriente Disponible</label>
-                        <input type="text" id="tipo_corriente" placeholder="Ej. Monofásica / Trifásica" class="w-full mt-1 p-2 bg-amber-50 border border-amber-300 rounded focus:ring-2 focus:ring-brand-600 focus:outline-none">
                     </div>
                 </div>
             </div>
@@ -339,6 +313,10 @@
                 <a href="FRICCION VALVULAS.pdf" target="_blank" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg text-xs transition flex items-center gap-1 border border-slate-300">
                     <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     Fricción Válvulas
+                </a>
+                <a href="CalculoCable2.html" target="_blank" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg text-xs transition flex items-center gap-1 border border-slate-300">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    Calculo de Cable
                 </a>
             </div>
 
