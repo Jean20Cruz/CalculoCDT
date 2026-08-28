@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Calibre de Cable - Hidropal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 0.3cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 8.5pt !important;
+                padding: 0 !important;
+            }
+            .print-container {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            input, select {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                font-weight: bold;
+                height: auto !important;
+            }
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.4rem !important;
+            }
+            .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.2rem !important;
+            }
+            .p-4, .sm\:p-6, .p-5 {
+                padding: 0.35rem !important;
+            }
+            .py-1 {
+                padding-top: 0.05rem !important;
+                padding-bottom: 0.05rem !important;
+            }
+            h1 { font-size: 14pt !important; }
+            h2 { font-size: 9pt !important; }
+            .text-3xl { font-size: 16pt !important; }
+            .text-2xl { font-size: 13pt !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans p-2 sm:p-4 md:p-6">
+
+    <div class="max-w-5xl mx-auto space-y-6">
+        
+        <!-- Header Logo y Botones de Acción (Línea gráfica CDT) -->
+        <header class="bg-gradient-to-r from-slate-900 via-brand-900 to-brand-800 text-white p-4 sm:p-6 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            
+            <!-- Logo + Título -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <div class="bg-white p-2 rounded-lg shadow-sm flex items-center justify-center shrink-0">
+                    <img src="Logo-Hidropal.png" alt="Hidropal Logo" class="h-8 sm:h-10 w-auto object-contain">
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Cálculo de Calibre de Cable</h1>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-0.5">Hidropal - División de Bombas</p>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="no-print flex flex-wrap gap-2 w-full sm:w-auto">
+                <button type="button" onclick="exportData()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Descargar Cálculo
+                </button>
+                <label class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Cargar Cálculo
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                </label>
+                <button type="button" onclick="window.print()" class="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Imprimir / PDF
+                </button>
+                <button type="button" onclick="resetForm()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-lg transition text-xs">
+                    Limpiar
+                </button>
+            </div>
+        </header>
+
+        <!-- PANEL DE CALCULADORA -->
+        <main class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-slate-300">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100">Parámetros del Motor Eléctrico</h2>
+            
+            <form id="calcForm" onsubmit="event.preventDefault(); calcularCalibre();" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Distancia y Unidad -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Distancia del Cable</label>
+                    <div class="flex rounded-lg shadow-sm">
+                        <input type="number" step="any" id="distancia" required placeholder="Ej. 150" class="w-full rounded-l-lg border-y border-l border-slate-300 px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <select id="unidadDistancia" class="rounded-r-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-600 border-l-0 focus:outline-none">
+                            <option value="pies">Pies (ft)</option>
+                            <option value="metros">Metros (m)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- HP del Motor -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Potencia (HP)</label>
+                    <select id="hp" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <option value="0.5">0.5 HP</option>
+                        <option value="0.75">0.75 HP</option>
+                        <option value="1">1 HP</option>
+                        <option value="1.5">1.5 HP</option>
+                        <option value="2">2 HP</option>
+                        <option value="3">3 HP</option>
+                        <option value="5">5 HP</option>
+                        <option value="7.5">7.5 HP</option>
+                        <option value="10">10 HP</option>
+                        <option value="15">15 HP</option>
+                        <option value="20">20 HP</option>
+                        <option value="25">25 HP</option>
+                        <option value="30">30 HP</option>
+                    </select>
+                </div>
+
+                <!-- Tipo de Fase -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Fase de Alimentación</label>
+                    <select id="fase" onchange="actualizarOpciones()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <option value="monofasico">Monofásico</option>
+                        <option value="trifasico">Trifásico</option>
+                    </select>
+                </div>
+
+                <!-- Voltaje -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Voltaje (V)</label>
+                    <select id="voltaje" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <!-- Opciones dinámicas -->
+                    </select>
+                </div>
+
+                <!-- Configuración de Hilos -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Configuración de Conectores</label>
+                    <select id="hilos" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <!-- Opciones dinámicas -->
+                    </select>
+                </div>
+
+                <div class="md:col-span-2 lg:col-span-3 flex justify-end mt-2">
+                    <button type="submit" class="w-full md:w-auto bg-brand-900 hover:bg-brand-800 text-white px-8 py-3 rounded-lg font-bold shadow-md transition-all">
+                        Calcular Calibre Selección
+                    </button>
+                </div>
+            </form>
+
+            <!-- RESULTADO -->
+            <div id="resultadoBox" class="hidden mt-8 p-6 bg-slate-50 rounded-xl border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Calibre Sugerido AWG / MCM</span>
+                        <h3 id="calibreResultado" class="text-3xl font-extrabold text-brand-900 mt-1">-</h3>
+                    </div>
+                    <div id="statusBadge" class="px-4 py-2 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                        Cumple Normativa NEC (75°C)
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- NAVEGACIÓN INFERIOR DE 3 ENLACES (GOOGLE) -->
+        <footer class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="calculoCDT2.html" target="_blank" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all text-center font-bold text-[#0b3c5d] hover:text-sky-600">
+                Cálculo de C.D.T.
+            </a>
+            <a href="https://wa.me/50378577386" target="_blank" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all text-center font-bold text-[#0b3c5d] hover:text-sky-600">
+                Soporte Técnico
+            </a>
+            <a href="amperes-cables.pdf" target="_blank" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all text-center font-bold text-[#0b3c5d] hover:text-sky-600">
+                Amperes Motor y Cables
+            </a>
+        </footer>
+    </div>
+
+    <!-- LOGICA JS -->
+    <script>
+        function actualizarOpciones() {
+            const fase = document.getElementById('fase').value;
+            const voltaje = document.getElementById('voltaje');
+            const hilos = document.getElementById('hilos');
+
+            if (fase === 'monofasico') {
+                voltaje.innerHTML = `
+                    <option value="115">115 V</option>
+                    <option value="230">230 V</option>
+                `;
+                hilos.innerHTML = `
+                    <option value="2or3">2 ó 3 Hilos</option>
+                `;
+            } else {
+                voltaje.innerHTML = `
+                    <option value="200">200 V</option>
+                    <option value="230">230 V</option>
+                    <option value="380">380 V</option>
+                    <option value="460">460 V</option>
+                    <option value="575">575 V</option>
+                `;
+                hilos.innerHTML = `
+                    <option value="3">3 Hilos</option>
+                    <option value="6">6 Hilos (Y-D)</option>
+                `;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('calcForm').reset();
+            document.getElementById('resultadoBox').classList.add('hidden');
+            actualizarOpciones();
+        }
+
+        function exportData() {
+            const data = {
+                distancia: document.getElementById('distancia').value,
+                unidadDistancia: document.getElementById('unidadDistancia').value,
+                hp: document.getElementById('hp').value,
+                fase: document.getElementById('fase').value,
+                voltaje: document.getElementById('voltaje').value,
+                hilos: document.getElementById('hilos').value
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'calculo_cable_hidropal.json';
+            a.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.distancia) document.getElementById('distancia').value = data.distancia;
+                    if (data.unidadDistancia) document.getElementById('unidadDistancia').value = data.unidadDistancia;
+                    if (data.hp) document.getElementById('hp').value = data.hp;
+                    if (data.fase) {
+                        document.getElementById('fase').value = data.fase;
+                        actualizarOpciones();
+                    }
+                    if (data.voltaje) document.getElementById('voltaje').value = data.voltaje;
+                    if (data.hilos) document.getElementById('hilos').value = data.hilos;
+                } catch (err) {
+                    alert('El archivo seleccionado no es válido.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function calcularCalibre() {
+            const distInput = parseFloat(document.getElementById('distancia').value);
+            const unidad = document.getElementById('unidadDistancia').value;
+            const distPies = unidad === 'metros' ? distInput * 3.28084 : distInput;
+            
+            let calibre = "#14 AWG";
+            if (distPies > 100 && distPies <= 250) calibre = "#12 AWG";
+            else if (distPies > 250 && distPies <= 500) calibre = "#10 AWG";
+            else if (distPies > 500 && distPies <= 1000) calibre = "#8 AWG";
+            else if (distPies > 1000) calibre = "#6 AWG o mayor";
+
+            document.getElementById('calibreResultado').innerText = calibre;
+            document.getElementById('resultadoBox').classList.remove('hidden');
+        }
+
+        actualizarOpciones();
+    </script>
+</body>
+</html>
