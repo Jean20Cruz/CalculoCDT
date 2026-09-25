@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lector y Procesador de Códigos de Barras</title>
+    <!-- Tailwind CSS for modern, responsive industrial UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-slate-800 border-b border-slate-700 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2.5 rounded-xl shadow-inner">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">Escáner de Números de Serie</h1>
+                    <p class="text-xs text-slate-400">Optimizado para pistolas lectoras con entrada por teclado</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 bg-slate-900 px-4 py-2 rounded-xl border border-slate-700">
+                <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-sm font-medium text-slate-300">Modo de Escaneo Activo</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl w-full mx-auto px-4 py-8 flex-grow space-y-6">
+        
+        <!-- Scanner Input Card -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <label for="barcodeInput" class="block text-sm font-semibold text-slate-300 mb-2">
+                Punto de Escaneo (Mantén el cursor aquí o escanea directamente)
+            </label>
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="barcodeInput" 
+                    placeholder="Escanea aquí el código de barras..." 
+                    autocomplete="off"
+                    autofocus
+                    class="w-full px-4 py-4 bg-slate-900 border-2 border-indigo-500/50 focus:border-indigo-500 rounded-xl text-lg text-white placeholder-slate-500 shadow-inner outline-none transition-all"
+                >
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1 text-xs text-slate-400 bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-700">
+                    <kbd class="font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">Enter</kbd>
+                    <span>automático</span>
+                </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round5" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                El sistema extrae el número de serie automáticamente si el formato contiene cadenas complejas (ej. <code class="text-indigo-300 font-mono">]S...</code>).
+            </p>
+        </div>
+
+        <!-- Notification Banner -->
+        <div id="notificationBanner" class="hidden px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-300 flex items-center justify-between">
+            <span id="notificationText">Mensaje del sistema</span>
+            <button onclick="hideNotification()" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+
+        <!-- Controls & Data Stats -->
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-slate-800/60 p-4 rounded-2xl border border-slate-700/80">
+            <div class="flex items-center space-x-4">
+                <div class="bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-700 flex items-center space-x-2">
+                    <span class="text-xs text-slate-400 font-medium">TOTAL ESCANEADOS:</span>
+                    <span id="counterBadge" class="text-lg font-bold text-indigo-400">0</span>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button 
+                    onclick="exportToTxt()" 
+                    id="exportBtn"
+                    disabled
+                    class="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Exportar Bloc de Notas (.txt)</span>
+                </button>
+                <button 
+                    onclick="clearAllRecords()" 
+                    id="clearBtn"
+                    disabled
+                    class="px-4 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    Limpiar Todo
+                </button>
+            </div>
+        </div>
+
+        <!-- Table / List Container -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-xl overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                <h2 class="font-semibold text-slate-200">Registros Temporales de Series</h2>
+                <span class="text-xs text-slate-400">Orden cronológico inverso</span>
+            </div>
+            
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-900/60 text-xs font-semibold text-slate-400 uppercase tracking-wider sticky top-0 border-b border-slate-700">
+                            <th class="py-3 px-6">#</th>
+                            <th class="py-3 px-6">Número de Serie Extraído</th>
+                            <th class="py-3 px-6">Código Original (Raw)</th>
+                            <th class="py-3 px-6 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody" class="divide-y divide-slate-700/50 text-sm">
+                        <!-- Dynamic rows will be inserted here -->
+                        <tr id="emptyRow">
+                            <td colspan="4" class="py-8 text-center text-slate-500 italic">
+                                No hay códigos escaneados todavía. Inicia el escaneo con tu pistola.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-800 border-t border-slate-700 mt-12 py-4 text-center text-xs text-slate-400">
+        <p>Sistema compatible con pistolas de lectura USB / Bluetooth en modo HID (Teclado).</p>
+    </footer>
+
+    <script>
+        // Array temporal para guardar los registros
+        let scannedRecords = [];
+
+        // Elementos del DOM
+        const barcodeInput = document.getElementById('barcodeInput');
+        const recordsTableBody = document.getElementById('recordsTableBody');
+        const counterBadge = document.getElementById('counterBadge');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const notificationBanner = document.getElementById('notificationBanner');
+        const notificationText = document.getElementById('notificationText');
+
+        // Mantener el input siempre enfocado ante cualquier clic fuera o pérdida de foco
+        document.addEventListener('click', (e) => {
+            // No robar foco si el usuario selecciona texto intencionalmente o da clic en botones de exportación/borrado
+            if (!e.target.closest('button') && !e.target.closest('a')) {
+                barcodeInput.focus();
+            }
+        });
+
+        // Event listener para capturar cuando la pistola lectora ingresa el código y presiona Enter
+        barcodeInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const rawValue = barcodeInput.value.trim();
+                
+                if (rawValue !== '') {
+                    processAndAddCode(rawValue);
+                    barcodeInput.value = ''; // Limpiar campo inmediatamente
+                }
+            }
+        });
+
+        /**
+         * Lógica de extracción de número de serie solicitada:
+         * Busca el patrón posterior a "]S" o procesa cadenas directas.
+         */
+        function extractSerialNumber(rawCode) {
+            // Ejemplo de entrada: )FE=]93781010]25K14]1]S25K142704915A]49260734]]
+            // Buscamos si existe la etiqueta "]S"
+            const markerIndex = rawCode.indexOf(']S');
+            if (markerIndex !== -1) {
+                const subStr = rawCode.substring(markerIndex + 2);
+                // Cortar en el siguiente corchete si existe, o tomar toda la cadena subsiguiente
+                const nextBracket = subStr.indexOf(']');
+                if (nextBracket !== -1) {
+                    return subStr.substring(0, nextBracket);
+                }
+                return subStr;
+            }
+            
+            // Si no contiene "]S", devolvemos el código limpio tal cual si es plano o genérico
+            return rawCode;
+        }
+
+        function processAndAddCode(rawCode) {
+            const serialNumber = extractSerialNumber(rawCode);
+
+            // Verificar si ya existe en la lista temporal para alertar al operario
+            const isDuplicate = scannedRecords.some(record => record.serial === serialNumber);
+
+            // Crear objeto de registro
+            const newRecord = {
+                id: Date.now() + Math.random().toString(36).substr(2, 4),
+                serial: serialNumber,
+                raw: rawCode,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            // Insertar al inicio de la lista
+            scannedRecords.unshift(newRecord);
+
+            // Actualizar interfaz
+            renderTable();
+
+            if (isDuplicate) {
+                showNotification(`¡Atención! El número de serie "${serialNumber}" ya fue escaneado previamente.`, 'warning');
+            } else {
+                showNotification(`Serie escaneada con éxito: ${serialNumber}`, 'success');
+            }
+        }
+
+        function renderTable() {
+            recordsTableBody.innerHTML = '';
+            
+            if (scannedRecords.length === 0) {
+                recordsTableBody.innerHTML = `
+                    <tr id="emptyRow">
+                        <td colspan="4" class="py-8 text-center text-slate-500 italic">
+                            No hay códigos escaneados todavía. Inicia el escaneo con tu pistola.
+                        </td>
+                    </tr>
+                `;
+                counterBadge.textContent = '0';
+                exportBtn.disabled = true;
+                clearBtn.disabled = true;
+                return;
+            }
+
+            counterBadge.textContent = scannedRecords.length;
+            exportBtn.disabled = false;
+            clearBtn.disabled = false;
+
+            scannedRecords.forEach((record, index) => {
+                const rowNumber = scannedRecords.length - index;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-700/30 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-3 px-6 text-slate-400 font-mono text-xs">${rowNumber}</td>
+                    <td class="py-3 px-6 font-mono font-semibold text-emerald-400">${escapeHtml(record.serial)}</td>
+                    <td class="py-3 px-6 text-slate-400 font-mono text-xs truncate max-w-xs" title="${escapeHtml(record.raw)}">${escapeHtml(record.raw)}</td>
+                    <td class="py-3 px-6 text-right">
+                        <button onclick="deleteRecord('${record.id}')" class="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors" title="Eliminar registro">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round5" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                recordsTableBody.appendChild(tr);
+            });
+        }
+
+        function deleteRecord(id) {
+            scannedRecords = scannedRecords.filter(record => record.id !== id);
+            renderTable();
+            showNotification('Registro eliminado temporalmente.', 'info');
+        }
+
+        function clearAllRecords() {
+            if (scannedRecords.length === 0) return;
+            if (confirmActionCustom("¿Estás seguro de limpiar todos los registros temporales?")) {
+                scannedRecords = [];
+                renderTable();
+                showNotification('Se han borrado todos los registros de la lista.', 'info');
+            }
+        }
+
+        // Alternativa segura a confirm nativo bloqueante utilizando un mensaje en pantalla o resolución rápida
+        function confirmActionCustom(message) {
+            return window.confirm(message);
+        }
+
+        /**
+         * Exportar registros a formato .txt de una columna (un número por línea)
+         */
+        function exportToTxt() {
+            if (scannedRecords.length === 0) return;
+
+            // Extraer solo los números de serie en orden de escaneo cronológico (invertimos para mantener el orden original de escaneo si se desea, o respetamos el orden actual. Usualmente el bloc de notas se exporta del primero al último o viceversa. Aquí exportaremos respetando la lista actual o cronológica).
+            // Si el usuario prefiere los más recientes arriba o abajo, los invertimos para que el primer escaneado quede arriba en el archivo de texto:
+            const exportLines = [...scannedRecords].reverse().map(record => record.serial).join('\n');
+
+            const blob = new Blob([exportLines], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            const timestamp = new Date().toISOString().slice(0,10);
+            a.href = url;
+            a.download = `numeros_de_serie_${timestamp}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('Archivo .txt exportado exitosamente con formato de una sola columna.', 'success');
+        }
+
+        function showNotification(message, type = 'success') {
+            notificationText.textContent = message;
+            notificationBanner.classList.remove('hidden', 'bg-emerald-900/80', 'border-emerald-500', 'text-emerald-200', 'bg-amber-900/80', 'border-amber-500', 'text-amber-200', 'bg-blue-900/80', 'border-blue-500', 'text-blue-200');
+
+            if (type === 'success') {
+                notificationBanner.classList.add('bg-emerald-900/80', 'border-emerald-500', 'text-emerald-200');
+            } else if (type === 'warning') {
+                notificationBanner.classList.add('bg-amber-900/80', 'border-amber-500', 'text-amber-200');
+            } else {
+                notificationBanner.classList.add('bg-blue-900/80', 'border-blue-500', 'text-blue-200');
+            }
+
+            notificationBanner.classList.remove('hidden');
+
+            // Auto ocultar después de 4 segundos
+            setTimeout(() => {
+                hideNotification();
+            }, 4000);
+        }
+
+        function hideNotification() {
+            notificationBanner.classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Enfocar al cargar la página
+        window.onload = function() {
+            barcodeInput.focus();
+        };
+    </script>
+</body>
+</html>
