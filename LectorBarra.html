@@ -57,8 +57,8 @@
                 </div>
             </div>
             <p class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round5" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                El sistema extrae el número de serie automáticamente si el formato contiene cadenas complejas (ej. <code class="text-indigo-300 font-mono">]S...</code>).
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                El sistema extrae el número de serie automáticamente si el formato contiene cadenas complejas (ej. <code class="text-indigo-300 font-mono">]S...</code> o <code class="text-indigo-300 font-mono">]s...</code>).
             </p>
         </div>
 
@@ -147,7 +147,6 @@
 
         // Mantener el input siempre enfocado ante cualquier clic fuera o pérdida de foco
         document.addEventListener('click', (e) => {
-            // No robar foco si el usuario selecciona texto intencionalmente o da clic en botones de exportación/borrado
             if (!e.target.closest('button') && !e.target.closest('a')) {
                 barcodeInput.focus();
             }
@@ -167,16 +166,15 @@
         });
 
         /**
-         * Lógica de extracción de número de serie solicitada:
-         * Busca el patrón posterior a "]S" o procesa cadenas directas.
+         * Lógica corregida: Busca la etiqueta de serie tanto en mayúsculas (]S) como en minúsculas (]s)
          */
         function extractSerialNumber(rawCode) {
-            // Ejemplo de entrada: )FE=]93781010]25K14]1]S25K142704915A]49260734]]
-            // Buscamos si existe la etiqueta "]S"
-            const markerIndex = rawCode.indexOf(']S');
+            // Convertimos temporalmente una copia a minúsculas solo para ubicar el marcador con precisión
+            const lowerCode = rawCode.toLowerCase();
+            let markerIndex = lowerCode.indexOf(']s');
+            
             if (markerIndex !== -1) {
                 const subStr = rawCode.substring(markerIndex + 2);
-                // Cortar en el siguiente corchete si existe, o tomar toda la cadena subsiguiente
                 const nextBracket = subStr.indexOf(']');
                 if (nextBracket !== -1) {
                     return subStr.substring(0, nextBracket);
@@ -184,17 +182,15 @@
                 return subStr;
             }
             
-            // Si no contiene "]S", devolvemos el código limpio tal cual si es plano o genérico
+            // Si no contiene la etiqueta, devuelve el código tal cual
             return rawCode;
         }
 
         function processAndAddCode(rawCode) {
             const serialNumber = extractSerialNumber(rawCode);
 
-            // Verificar si ya existe en la lista temporal para alertar al operario
             const isDuplicate = scannedRecords.some(record => record.serial === serialNumber);
 
-            // Crear objeto de registro
             const newRecord = {
                 id: Date.now() + Math.random().toString(36).substr(2, 4),
                 serial: serialNumber,
@@ -202,10 +198,7 @@
                 timestamp: new Date().toLocaleTimeString()
             };
 
-            // Insertar al inicio de la lista
             scannedRecords.unshift(newRecord);
-
-            // Actualizar interfaz
             renderTable();
 
             if (isDuplicate) {
@@ -247,7 +240,7 @@
                     <td class="py-3 px-6 text-right">
                         <button onclick="deleteRecord('${record.id}')" class="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors" title="Eliminar registro">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round5" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
                         </button>
                     </td>
@@ -271,19 +264,13 @@
             }
         }
 
-        // Alternativa segura a confirm nativo bloqueante utilizando un mensaje en pantalla o resolución rápida
         function confirmActionCustom(message) {
             return window.confirm(message);
         }
 
-        /**
-         * Exportar registros a formato .txt de una columna (un número por línea)
-         */
         function exportToTxt() {
             if (scannedRecords.length === 0) return;
 
-            // Extraer solo los números de serie en orden de escaneo cronológico (invertimos para mantener el orden original de escaneo si se desea, o respetamos el orden actual. Usualmente el bloc de notas se exporta del primero al último o viceversa. Aquí exportaremos respetando la lista actual o cronológica).
-            // Si el usuario prefiere los más recientes arriba o abajo, los invertimos para que el primer escaneado quede arriba en el archivo de texto:
             const exportLines = [...scannedRecords].reverse().map(record => record.serial).join('\n');
 
             const blob = new Blob([exportLines], { type: 'text/plain;charset=utf-8' });
@@ -315,7 +302,6 @@
 
             notificationBanner.classList.remove('hidden');
 
-            // Auto ocultar después de 4 segundos
             setTimeout(() => {
                 hideNotification();
             }, 4000);
@@ -329,7 +315,6 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Enfocar al cargar la página
         window.onload = function() {
             barcodeInput.focus();
         };
